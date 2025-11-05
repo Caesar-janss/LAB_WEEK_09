@@ -1,6 +1,5 @@
 package com.example.lab_week_09
 
-// 🟢 Tambahan import yang wajib ada agar kode dikenali compiler
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,7 +8,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -18,128 +18,146 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.lab_week_09.ui.theme.LAB_WEEK_09Theme
 
+// -----------------------------------------------------------------------------------------
 // Previously we extend AppCompatActivity,
 // now we extend ComponentActivity
+// -----------------------------------------------------------------------------------------
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Here, we use setContent instead of setContentView
         setContent {
-            // Here, we wrap our content with the theme
-            // You can check out the LAB_WEEK_09Theme inside Theme.kt
+            // Wrap our composable content with the app theme
             LAB_WEEK_09Theme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    // We use Modifier.fillMaxSize() to make the surface fill the whole screen
                     modifier = Modifier.fillMaxSize(),
-                    // We use MaterialTheme.colorScheme.background to get the background color
-                    // and set it as the color of the surface
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Here, we call the Home composable
-                    val list = listOf("Tanu", "Tina", "Tono")
-                    Home(list)
+                    // Call Home() composable to display the main UI
+                    Home()
                 }
             }
         }
     }
 }
 
-// Here, instead of defining it in an XML file,
-// we create a composable function called Home
-// @Preview is used to show a preview of the composable
-@Preview(showBackground = true)
-// @Composable is used to tell the compiler that this is a composable function
-// It's a way of defining a composable
+// -----------------------------------------------------------------------------------------
+// 🧩 Home() – The root composable
+// This composable manages the states and passes them to HomeContent()
+// -----------------------------------------------------------------------------------------
 @Composable
 fun Home() {
-    // Here, we use Column to display a list of items vertically
-    // You can also use Row to display a list of items horizontally
-    Column {
-        // Here, we use Text to display a text
-        Text(
-            // and set it as the text
-            text = "Example Text"
+    // 🟢 Create a mutable list of Student using remember
+    val listData = remember {
+        mutableStateListOf(
+            Student("Tanu"),
+            Student("Tina"),
+            Student("Tono")
+        )
+    }
+
+    // 🟢 Create a mutable state for text input
+    var inputField by remember { mutableStateOf(Student("")) }
+
+    // 🟢 Call HomeContent() and pass required parameters
+    HomeContent(
+        listData = listData,
+        inputField = inputField,
+        onInputValueChange = { input ->
+            inputField = inputField.copy(name = input)
+        },
+        onButtonClick = {
+            if (inputField.name.isNotBlank()) {
+                listData.add(inputField)
+                inputField = Student("")
+            }
+        }
+    )
+}
+
+// -----------------------------------------------------------------------------------------
+// 🧩 HomeContent() – displays the actual UI and handles user input
+// -----------------------------------------------------------------------------------------
+@Composable
+fun HomeContent(
+    listData: SnapshotStateList<Student>,
+    inputField: Student,
+    onInputValueChange: (String) -> Unit,
+    onButtonClick: () -> Unit
+) {
+    // Use LazyColumn for vertical scrolling list
+    LazyColumn {
+        // Header section: input + button
+        item {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = stringResource(id = R.string.enter_item))
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // TextField for user input
+                TextField(
+                    value = inputField.name,
+                    onValueChange = { onInputValueChange(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    placeholder = { Text("Enter name here") }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Button for adding input to list
+                Button(onClick = { onButtonClick() }) {
+                    Text(text = stringResource(id = R.string.button_click))
+                }
+            }
+        }
+
+        // Display all list items
+        items(listData) { item ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = item.name)
+            }
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------------------
+// 🧩 Preview for design-time in Android Studio
+// -----------------------------------------------------------------------------------------
+@Preview(showBackground = true)
+@Composable
+fun PreviewHome() {
+    LAB_WEEK_09Theme {
+        // Static preview with dummy data (non-interactive)
+        val sampleList = mutableStateListOf(
+            Student("Tanu"),
+            Student("Tina"),
+            Student("Tono"),
+            Student("Preview Sample")
+        )
+        HomeContent(
+            listData = sampleList,
+            inputField = Student(""),
+            onInputValueChange = {},
+            onButtonClick = {}
         )
     }
 }
 
-// Notice that we remove the @Preview annotation
-// this is because we're passing a parameter into the composable
-// When the compiler tries to build the preview,
-// it doesn't know what to pass into the composable
-// So, we create another composable function called PreviewHome
-// and we pass the list as a parameter
-@Composable
-fun Home(
-    // Here, we define a parameter called items
-    items: List<String>,
-) {
-    // Here, we use LazyColumn to lazily display a list of items vertically
-    // LazyColumn is more efficient than Column
-    // because it only composes and lays out the currently visible items
-    // much like a RecyclerView
-    // You can also use LazyRow to lazily display a list of items horizontally
-    LazyColumn {
-        // Here, we use item to display an item inside the LazyColumn
-        item {
-            Column(
-                // Modifier.padding(16.dp) is used to add padding to the Column
-                // You can also use Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                // to add padding horizontally and vertically
-                // or Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 8.dp)
-                // to add padding to each side
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxSize(),
-                // Alignment.CenterHorizontally is used to align the Column horizontally
-                // You can also use verticalArrangement = Arrangement.Center to align the Column vertically
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = stringResource(id = R.string.enter_item)
-                )
-                // Here, we use TextField to display a text input field
-                TextField(
-                    // Set the value of the input field
-                    value = "",
-                    // Set the keyboard type of the input field
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    ),
-                    // Set what happens when the value of the input field changes
-                    onValueChange = { }
-                )
-                // Here, we use Button to display a button
-                // the onClick parameter is used to set what happens when the button is clicked
-                Button(onClick = { }) {
-                    // Set the text of the button
-                    Text(
-                        text = stringResource(id = R.string.button_click)
-                    )
-                }
-            }
-        }
-        // Here, we use items to display a list of items inside the LazyColumn
-        // This is the RecyclerView replacement
-        items(items) { item ->
-            Column(
-                modifier = Modifier
-                    .padding(vertical = 4.dp)
-                    .fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(text = item)
-            }
-        }
-    }
-}
-
-// Here, we create a preview function of the Home composable
-// This function is specifically used to show a preview of the Home composable
-// This is only for development purpose
-@Preview(showBackground = true)
-@Composable
-fun PreviewHome() {
-    Home(listOf("Tanu", "Tina", "Tono"))
-}
+// -----------------------------------------------------------------------------------------
+// 🧩 Data class Student – represents a student entity
+// -----------------------------------------------------------------------------------------
+data class Student(
+    var name: String
+)
