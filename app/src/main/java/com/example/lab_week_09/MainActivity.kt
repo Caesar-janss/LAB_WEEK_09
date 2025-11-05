@@ -17,24 +17,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.lab_week_09.ui.theme.LAB_WEEK_09Theme
+import com.example.lab_week_09.ui.theme.OnBackgroundItemText
+import com.example.lab_week_09.ui.theme.OnBackgroundTitleText
+import com.example.lab_week_09.ui.theme.PrimaryTextButton
 
 // -----------------------------------------------------------------------------------------
-// Previously we extend AppCompatActivity,
-// now we extend ComponentActivity
+// MainActivity – sets up the Composable content
 // -----------------------------------------------------------------------------------------
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Here, we use setContent instead of setContentView
         setContent {
-            // Wrap our composable content with the app theme
             LAB_WEEK_09Theme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // Call Home() composable to display the main UI
                     Home()
                 }
             }
@@ -43,12 +41,10 @@ class MainActivity : ComponentActivity() {
 }
 
 // -----------------------------------------------------------------------------------------
-// 🧩 Home() – The root composable
-// This composable manages the states and passes them to HomeContent()
+// 🧩 Home() – root composable
 // -----------------------------------------------------------------------------------------
 @Composable
 fun Home() {
-    // 🟢 Create a mutable list of Student using remember
     val listData = remember {
         mutableStateListOf(
             Student("Tanu"),
@@ -56,11 +52,8 @@ fun Home() {
             Student("Tono")
         )
     }
-
-    // 🟢 Create a mutable state for text input
     var inputField by remember { mutableStateOf(Student("")) }
 
-    // 🟢 Call HomeContent() and pass required parameters
     HomeContent(
         listData = listData,
         inputField = inputField,
@@ -77,7 +70,7 @@ fun Home() {
 }
 
 // -----------------------------------------------------------------------------------------
-// 🧩 HomeContent() – displays the actual UI and handles user input
+// 🧩 HomeContent() – shows the UI and handles events
 // -----------------------------------------------------------------------------------------
 @Composable
 fun HomeContent(
@@ -86,9 +79,7 @@ fun HomeContent(
     onInputValueChange: (String) -> Unit,
     onButtonClick: () -> Unit
 ) {
-    // Use LazyColumn for vertical scrolling list
     LazyColumn {
-        // Header section: input + button
         item {
             Column(
                 modifier = Modifier
@@ -96,11 +87,13 @@ fun HomeContent(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = stringResource(id = R.string.enter_item))
+                // Title text using custom UI element
+                OnBackgroundTitleText(
+                    text = stringResource(id = R.string.enter_item)
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // TextField for user input
                 TextField(
                     value = inputField.name,
                     onValueChange = { onInputValueChange(it) },
@@ -111,14 +104,15 @@ fun HomeContent(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Button for adding input to list
-                Button(onClick = { onButtonClick() }) {
-                    Text(text = stringResource(id = R.string.button_click))
-                }
+                // Custom button element
+                PrimaryTextButton(
+                    text = stringResource(id = R.string.button_click),
+                    onClick = { onButtonClick() }
+                )
             }
         }
 
-        // Display all list items
+        // Display list items using custom item text
         items(listData) { item ->
             Column(
                 modifier = Modifier
@@ -126,20 +120,19 @@ fun HomeContent(
                     .padding(vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = item.name)
+                OnBackgroundItemText(text = item.name)
             }
         }
     }
 }
 
 // -----------------------------------------------------------------------------------------
-// 🧩 Preview for design-time in Android Studio
+// Preview for design-time
 // -----------------------------------------------------------------------------------------
 @Preview(showBackground = true)
 @Composable
 fun PreviewHome() {
     LAB_WEEK_09Theme {
-        // Static preview with dummy data (non-interactive)
         val sampleList = mutableStateListOf(
             Student("Tanu"),
             Student("Tina"),
@@ -156,8 +149,6 @@ fun PreviewHome() {
 }
 
 // -----------------------------------------------------------------------------------------
-// 🧩 Data class Student – represents a student entity
+// Data class Student
 // -----------------------------------------------------------------------------------------
-data class Student(
-    var name: String
-)
+data class Student(var name: String)
