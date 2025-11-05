@@ -16,19 +16,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.lab_week_09.ui.theme.LAB_WEEK_09Theme
-import com.example.lab_week_09.ui.theme.OnBackgroundItemText
-import com.example.lab_week_09.ui.theme.OnBackgroundTitleText
-import com.example.lab_week_09.ui.theme.PrimaryTextButton
+import com.example.lab_week_09.ui.theme.*
 
-// -----------------------------------------------------------------------------------------
-// MainActivity – sets up the Composable content
-// -----------------------------------------------------------------------------------------
+//Previously we extend AppCompatActivity,
+//now we extend ComponentActivity
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //Here, we use setContent instead of setContentView
         setContent {
+            //Here, we wrap our content with the theme
             LAB_WEEK_09Theme {
+                //A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -40,11 +39,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// -----------------------------------------------------------------------------------------
-// 🧩 Home() – root composable
-// -----------------------------------------------------------------------------------------
+//Here, instead of defining it in an XML file,
+//we create a composable function called Home
 @Composable
 fun Home() {
+    //Here, we create a mutable state list of Student
     val listData = remember {
         mutableStateListOf(
             Student("Tanu"),
@@ -52,15 +51,16 @@ fun Home() {
             Student("Tono")
         )
     }
+
+    //Here, we create a mutable state of Student
     var inputField by remember { mutableStateOf(Student("")) }
 
+    //We call the HomeContent composable
     HomeContent(
-        listData = listData,
-        inputField = inputField,
-        onInputValueChange = { input ->
-            inputField = inputField.copy(name = input)
-        },
-        onButtonClick = {
+        listData,
+        inputField,
+        { input -> inputField = inputField.copy(name = input) },
+        {
             if (inputField.name.isNotBlank()) {
                 listData.add(inputField)
                 inputField = Student("")
@@ -69,9 +69,7 @@ fun Home() {
     )
 }
 
-// -----------------------------------------------------------------------------------------
-// 🧩 HomeContent() – shows the UI and handles events
-// -----------------------------------------------------------------------------------------
+//HomeContent is used to display the content of the Home composable
 @Composable
 fun HomeContent(
     listData: SnapshotStateList<Student>,
@@ -80,55 +78,60 @@ fun HomeContent(
     onButtonClick: () -> Unit
 ) {
     LazyColumn {
+        //Input form section
         item {
             Column(
                 modifier = Modifier
                     .padding(16.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Title text using custom UI element
-                OnBackgroundTitleText(
-                    text = stringResource(id = R.string.enter_item)
-                )
+                //Here, we call the OnBackgroundTitleText UI Element
+                OnBackgroundTitleText(text = stringResource(id = R.string.enter_item))
 
-                Spacer(modifier = Modifier.height(8.dp))
-
+                //Here, we use TextField to display a text input field
                 TextField(
                     value = inputField.name,
-                    onValueChange = { onInputValueChange(it) },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    placeholder = { Text("Enter name here") }
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text
+                    ),
+                    onValueChange = { onInputValueChange(it) }
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Custom button element
+                //Here, we call the PrimaryTextButton UI Element
                 PrimaryTextButton(
                     text = stringResource(id = R.string.button_click),
-                    onClick = { onButtonClick() }
+                    onClick = onButtonClick
                 )
             }
         }
 
-        // Display list items using custom item text
+        //List of items section
         items(listData) { item ->
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 4.dp)
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                //Here, we call the OnBackgroundItemText UI Element
                 OnBackgroundItemText(text = item.name)
             }
+        }
+
+        //Debug text to display list content
+        item {
+            //Display listData as a string (for debugging purpose)
+            Text(
+                text = listData.toString(),
+                modifier = Modifier.padding(top = 16.dp)
+            )
         }
     }
 }
 
-// -----------------------------------------------------------------------------------------
-// Preview for design-time
-// -----------------------------------------------------------------------------------------
+//Preview for development only
 @Preview(showBackground = true)
 @Composable
 fun PreviewHome() {
@@ -137,7 +140,7 @@ fun PreviewHome() {
             Student("Tanu"),
             Student("Tina"),
             Student("Tono"),
-            Student("Preview Sample")
+            Student("Tinky Winky")
         )
         HomeContent(
             listData = sampleList,
@@ -148,7 +151,7 @@ fun PreviewHome() {
     }
 }
 
-// -----------------------------------------------------------------------------------------
-// Data class Student
-// -----------------------------------------------------------------------------------------
-data class Student(var name: String)
+//Declare a data class called Student
+data class Student(
+    var name: String
+)
